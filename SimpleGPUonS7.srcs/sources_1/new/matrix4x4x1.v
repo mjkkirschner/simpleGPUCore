@@ -21,41 +21,46 @@
 
 
 module matrix4x4x1(
-    input [0:255] mvp_in,
-    input [0:63] vertex_in,
-    output reg [0:63] result
+    input [255:0] mvp_in,
+    input [63:0] vertex_in,
+    output [63:0] result
     );
     
     parameter Q = 8;
     parameter N = 16;
     
     //internal variables
-    reg [0:15] mvp_inTemp[0:15][0:15];
-    reg [0:15] vertex_inTemp[0:3];
-    reg [0:15] res_Temp [0:3];
+    reg [15:0] mvp_inTemp[0:3][0:3];
+    reg [15:0] vertex_inTemp[0:3];
+    wire [15:0] res_TempOut [0:3];
+    wire [15:0] res_TempIntermediate [0:7];
     
-    reg[0:16] tempx1;
-    reg[0:16] tempx2;
-    reg[0:16] tempx3;
-    reg[0:16] tempx4;
+    reg [63:0] out_reg_result = 0;
     
-    reg[0:16] tempy1;
-    reg[0:16] tempy2;
-    reg[0:16] tempy3;
-    reg[0:16] tempy4;
+     wire [15:0] tempx1;
+     wire [15:0] tempx2;
+     wire [15:0] tempx3;
+    wire [15:0] tempx4;
     
-    reg[0:16] tempz1;
-    reg[0:16] tempz2;
-    reg[0:16] tempz3;
-    reg[0:16] tempz4;
+     wire [15:0] tempy1;
+     wire [15:0] tempy2;
+     wire [15:0] tempy3;
+     wire [15:0] tempy4;
+    
+     wire [15:0] tempz1;
+     wire [15:0] tempz2;
+     wire [15:0] tempz3;
+     wire [15:0] tempz4;
 
-    reg[0:16] tempw1;
-    reg[0:16] tempw2;
-    reg[0:16] tempw3;
-    reg[0:16] tempw4;
+     wire [15:0] tempw1;
+     wire [15:0] tempw2;
+     wire [15:0] tempw3;
+     wire [15:0] tempw4;
     
     integer i,j = 0;
     
+    
+    assign result = out_reg_result;
     
     //TODO I think matrix[row][col] is correct.
     
@@ -70,7 +75,7 @@ module matrix4x4x1(
       
       qadd #(
           .Q(Q),
-         .N(N)) add2x(tempx2,tempx1,res_Temp[0]);
+         .N(N)) add2x(tempx2,tempx1,res_TempIntermediate[0]);
 
      qmult #(
      .Q(Q),
@@ -78,7 +83,7 @@ module matrix4x4x1(
     
     qadd #(
         .Q(Q),
-       .N(N)) add3x(res_Temp[0],tempx3,res_Temp[0]);
+       .N(N)) add3x(res_TempIntermediate[0],tempx3,res_TempIntermediate[1]);
     
     qmult #(
        .Q(Q),
@@ -86,7 +91,7 @@ module matrix4x4x1(
       
       qadd #(
           .Q(Q),
-         .N(N)) add4x(res_Temp[0],tempx4,res_Temp[0]);   
+         .N(N)) add4x(res_TempIntermediate[1],tempx4,res_TempOut[0]);   
     
     
     //calculate y component of result vector
@@ -100,7 +105,7 @@ module matrix4x4x1(
                
                qadd #(
                    .Q(Q),
-                  .N(N)) add2y(tempy2,tempy1,res_Temp[1]);
+                  .N(N)) add2y(tempy2,tempy1,res_TempIntermediate[2]);
          
               qmult #(
               .Q(Q),
@@ -108,7 +113,7 @@ module matrix4x4x1(
              
              qadd #(
                  .Q(Q),
-                .N(N)) add3y(res_Temp[1],tempy3,res_Temp[1]);
+                .N(N)) add3y(res_TempIntermediate[2],tempy3,res_TempIntermediate[3]);
              
              qmult #(
                 .Q(Q),
@@ -116,7 +121,7 @@ module matrix4x4x1(
                
                qadd #(
                    .Q(Q),
-                  .N(N)) add4y(res_Temp[1],tempy4,res_Temp[1]); 
+                  .N(N)) add4y(res_TempIntermediate[3],tempy4,res_TempOut[1]); 
     
    
     //calculate z component of result vector
@@ -130,7 +135,7 @@ module matrix4x4x1(
       
       qadd #(
           .Q(Q),
-         .N(N)) add2z(tempz2,tempz1,res_Temp[2]);
+         .N(N)) add2z(tempz2,tempz1,res_TempIntermediate[4]);
 
      qmult #(
      .Q(Q),
@@ -138,7 +143,7 @@ module matrix4x4x1(
     
     qadd #(
         .Q(Q),
-       .N(N)) add3z(res_Temp[2],tempz3,res_Temp[2]);
+       .N(N)) add3z(res_TempIntermediate[4],tempz3,res_TempIntermediate[5]);
     
     qmult #(
        .Q(Q),
@@ -146,7 +151,7 @@ module matrix4x4x1(
       
       qadd #(
           .Q(Q),
-         .N(N)) add4z(res_Temp[2],tempz4,res_Temp[2]);    
+         .N(N)) add4z(res_TempIntermediate[5],tempz4,res_TempOut[2]);    
     
     
    //calculate w component of result vector
@@ -160,7 +165,7 @@ module matrix4x4x1(
               
               qadd #(
                   .Q(Q),
-                 .N(N)) add2w(tempw2,tempw1,res_Temp[3]);
+                 .N(N)) add2w(tempw2,tempw1,res_TempIntermediate[6]);
         
              qmult #(
              .Q(Q),
@@ -168,7 +173,7 @@ module matrix4x4x1(
             
             qadd #(
                 .Q(Q),
-               .N(N)) add3w(res_Temp[3],tempw3,res_Temp[3]);
+               .N(N)) add3w(res_TempIntermediate[6],tempw3,res_TempIntermediate[7]);
             
             qmult #(
                .Q(Q),
@@ -176,12 +181,12 @@ module matrix4x4x1(
               
               qadd #(
                   .Q(Q),
-                 .N(N)) add4w(res_Temp[3],tempw4,res_Temp[3]);      
+                 .N(N)) add4w(res_TempIntermediate[7],tempw4,res_TempOut[3]);      
     
     
        
     
-    always@(mvp_in,vertex_in) begin
+    always@(mvp_in,vertex_in,res_TempOut) begin
      //convert 1d to 3d
      //TODO consider row v col.
 
@@ -206,7 +211,7 @@ module matrix4x4x1(
         //        res_Temp[i] = res_Temp[i] + mvp_inTemp[i][j] * vertex_inTemp[j];
                 
                 //flatten result back to 1d vector (4 * 16 bits)
-        result = {res_Temp[0],res_Temp[1],res_Temp[2],res_Temp[3]};
+        out_reg_result = {res_TempOut[0],res_TempOut[1],res_TempOut[2],res_TempOut[3]};
     end
     
     

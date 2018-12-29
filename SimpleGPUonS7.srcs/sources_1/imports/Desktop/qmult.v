@@ -46,7 +46,7 @@ module qmult #(
 //---------------------------------------------------------------------------------
 	always @(i_multiplicand, i_multiplier)	begin						//	Do the multiply any time the inputs change
 		r_result <= i_multiplicand[N-2:0] * i_multiplier[N-2:0];	//	Removing the sign bits from the multiply - that 
-																					//		would introduce *big* errors	
+	   #100 $display("multiplying %b, and %b, %b",i_multiplicand,i_multiplier, r_result);																			//		would introduce *big* errors	
 		ovr <= 1'b0;															//	reset overflow flag to zero
 		end
 	
@@ -54,7 +54,7 @@ module qmult #(
 	always @(r_result) begin													//	Any time the result changes, we need to recompute the sign bit,
 		r_RetVal[N-1] <= i_multiplicand[N-1] ^ i_multiplier[N-1];	//		which is the XOR of the input sign bits...  (you do the truth table...)
 		r_RetVal[N-2:0] <= r_result[N-2+Q:Q];								//	And we also need to push the proper N bits of result up to 
-																						//		the calling entity...
+		#100 $display("multiplying %b, and %b, %b",i_multiplicand,i_multiplier, r_RetVal);																					//		the calling entity...
 		if (r_result[2*N-2:N-1+Q] > 0)										// And finally, we need to check for an overflow
 			ovr <= 1'b1;
 		end
