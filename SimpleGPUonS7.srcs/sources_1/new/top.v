@@ -53,9 +53,7 @@ module top(
     reg [18:0] frameBufferAddressLines1 = 0;
     reg [18:0] frameBufferAddressLines2 = 0;
     reg  frameBufferData = 1; 
-    reg frameBuffer_cs_ = 0;
     reg frameBuffer_we_ = 1;
-    reg frameBuffer_oe_ = 0;
     wire frameBufferDataOut1;
     wire frameBufferDataOut2;
     
@@ -69,6 +67,7 @@ module top(
     wire [8:0] yvga;
     reg [15:0] cnt = 0;
     reg pix_stb = 0;
+    reg outputColorReg = 0;
     
     //TODO do we need to reverse the bit format in the ram modules?
  
@@ -81,18 +80,40 @@ module top(
                        .oe_(oe_),
                         .clock(i_clk),
                        .Q(vertDataOut));
-   */                    
-   dualPortStaticRam #(.ROMFILE("framebuffer.mem"),.DATA_WIDTH(1),.ADDR_WIDTH(18)) frameBuffer (
+   */            
+   
+   
+    /*
+       localparam SCREEN_HEIGHT = 480;
+       localparam VRAM_DEPTH = SCREEN_WIDTH * SCREEN_HEIGHT; 
+       localparam VRAM_A_WIDTH = 19;  // 2^18 > 640 x 360
+       localparam VRAM_D_WIDTH = 1;   // colour bits per pixel
+    
+   sram #(
+              .ADDR_WIDTH(VRAM_A_WIDTH), 
+              .DATA_WIDTH(VRAM_D_WIDTH), 
+              .DEPTH(VRAM_DEPTH), 
+              .MEMFILE("framebuffer.mem"))  // bitmap to load
+              vram (
+              .i_addr(frameBufferAddressLines2), 
+              .i_clk(i_clk), 
+              .i_write(0),  // we're always reading
+              .i_data(0), 
+              .o_data(frameBufferDataOut2)
+          );
+        */
+          
+   dualPortStaticRam #(.ROMFILE("framebuffer.mem"),.DATA_WIDTH(1),.ADDR_WIDTH(19)) frameBuffer (
                        .address_1(frameBufferAddressLines1),
                        .address_2(frameBufferAddressLines2),
                         .data(frameBufferData), 
-                        .cs_(frameBuffer_cs_),
                          .we_(frameBuffer_we_),
-                         .oe_(frameBuffer_oe_),
                          .clock(i_clk),
                          .clock2(i_clk),
                          .Q_1(frameBufferDataOut1),
                          .Q_2(frameBufferDataOut2));
+
+
      /*                  
         vert_projector #(.Q(4),.N(16)) 
                projector(.i_clk(i_clk),
@@ -122,9 +143,9 @@ module top(
                                          
                            assign VGA_HS_O = hs;
                            assign VGA_VS_O = vs;
-                           assign VGA_R = frameBufferDataOut2;
-                           assign VGA_G = frameBufferDataOut2;
-                           assign VGA_B = frameBufferDataOut2;
+                           assign VGA_R = outputColorReg;
+                           assign VGA_G = outputColorReg;
+                           assign VGA_B = outputColorReg;
     /*                       
                            //width and height are 16 bit integers (really 11)
                            input [11:0] width_in,
@@ -147,7 +168,7 @@ module top(
        iterationCounter <= iterationCounter + 1;
        //TODO try moving this inside a 25mhz clock
        frameBufferAddressLines2 <= (yvga * SCREEN_WIDTH) + xvga;
-  
+       outputColorReg <= frameBufferDataOut2;
   /*     
        //~3mhz
            if(iterationCounter[4] == 1) begin

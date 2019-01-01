@@ -4,9 +4,7 @@
         address_1     , // Address Input
         address_2     , // Address Input
         data        , // Data input
-        cs_,
         we_,
-        oe_,
         clock,
         clock2,
         Q_1,               //output
@@ -22,9 +20,7 @@
         input [ADDR_WIDTH-1:0] address_1 ;
         input [ADDR_WIDTH-1:0] address_2 ;
         input [DATA_WIDTH-1:0]  data;
-        input cs_;
         input we_;
-        input oe_;
         input clock;
         input clock2;
     
@@ -45,12 +41,14 @@
         
         always @(posedge clock)
         begin
-          if (!cs_ && !we_)
+          if (!we_) begin
             mem[address_1] = data;
-           Q_1 = (!cs_ && !oe_) ? mem[address_1] : {DATA_WIDTH{1'bz}};
-           //Q_2 = mem[address_2];
+          end
+          else begin
+           Q_1 <=  mem[address_1];
+          end
         end
-
+        
         always@(posedge clock2) begin
             Q_2 = mem[address_2];
         end
