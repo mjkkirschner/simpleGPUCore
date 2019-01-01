@@ -97,7 +97,7 @@ module qdiv #(
 			if(reg_count == 0) begin
 				reg_done <= 1'b1;										//	If we're done, it's time to tell the calling process
 				reg_quotient <= reg_working_quotient;			//	Move in our working copy to the outside world
-				#5 $display("divisionDone %b, and %b, %b",i_dividend,i_divisor, reg_working_quotient);
+				//#5 $display("divisionDone %b, and %b, %b",i_dividend,i_divisor, reg_working_quotient);
 				if (reg_working_quotient[2*N+Q-3:N]>0)
 					reg_overflow <= 1'b1;
 					end

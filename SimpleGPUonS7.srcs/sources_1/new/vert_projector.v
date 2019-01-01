@@ -15,7 +15,10 @@ module vert_projector(
        wire [63:0] result;
        reg in_start_1;
        
-       wire division_done;
+       wire x_division_done;
+       wire y_division_done;
+       wire z_division_done;
+
        reg inProgress = 0;
        reg [8:0] counter = 0;
        reg divide_start = 0;
@@ -57,7 +60,7 @@ module vert_projector(
                .i_start(divide_start),
                .i_clk(i_clk),
                .o_quotient_out(xResult),
-               .o_complete(division_done)
+               .o_complete(x_division_done)
                );
                
         qdiv#(
@@ -69,7 +72,7 @@ module vert_projector(
                 .i_start(divide_start),
                 .i_clk(i_clk),
                 .o_quotient_out(yResult),
-                .o_complete(division_done)
+                .o_complete(y_division_done)
                 );
                 
     qdiv#(
@@ -81,7 +84,7 @@ module vert_projector(
                .i_start(divide_start),
                .i_clk(i_clk),
                .o_quotient_out(zResult),
-               .o_complete(division_done)
+               .o_complete(z_division_done)
                );
                
              
@@ -99,7 +102,7 @@ module vert_projector(
                        // start dividing - then wait another 17 clocks to be safe.
                        // or wait until the complete signal is raised.
                             divide_start <= 1;
-                                if(division_done == 1 && counter > WAIT * 2) begin
+                                if(z_division_done == 1 && counter > WAIT * 2) begin
                                     // we're done dividing
                                     out_done_reg <= 1;
                                     counter <= 0;

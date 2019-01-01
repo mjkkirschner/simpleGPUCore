@@ -127,11 +127,11 @@ module matrix4x4x1(
     //calculate z component of result vector
      qmult #(
      .Q(Q),
-    .N(N)) mult1z(mvp_inTemp[1][0],vertex_inTemp[0],tempz1);
+    .N(N)) mult1z(mvp_inTemp[2][0],vertex_inTemp[0],tempz1);
     
       qmult #(
        .Q(Q),
-      .N(N)) mult12z(mvp_inTemp[1][1],vertex_inTemp[1],tempz2);
+      .N(N)) mult12z(mvp_inTemp[2][1],vertex_inTemp[1],tempz2);
       
       qadd #(
           .Q(Q),
@@ -139,7 +139,7 @@ module matrix4x4x1(
 
      qmult #(
      .Q(Q),
-    .N(N)) mult3z(mvp_inTemp[1][2],vertex_inTemp[2],tempz3);
+    .N(N)) mult3z(mvp_inTemp[2][2],vertex_inTemp[2],tempz3);
     
     qadd #(
         .Q(Q),
@@ -147,7 +147,7 @@ module matrix4x4x1(
     
     qmult #(
        .Q(Q),
-      .N(N)) mult4z(mvp_inTemp[1][3],vertex_inTemp[3],tempz4);
+      .N(N)) mult4z(mvp_inTemp[2][3],vertex_inTemp[3],tempz4);
       
       qadd #(
           .Q(Q),
@@ -157,11 +157,11 @@ module matrix4x4x1(
    //calculate w component of result vector
              qmult #(
              .Q(Q),
-            .N(N)) mult1w(mvp_inTemp[1][0],vertex_inTemp[0],tempw1);
+            .N(N)) mult1w(mvp_inTemp[3][0],vertex_inTemp[0],tempw1);
             
               qmult #(
                .Q(Q),
-              .N(N)) mult12w(mvp_inTemp[1][1],vertex_inTemp[1],tempw2);
+              .N(N)) mult12w(mvp_inTemp[3][1],vertex_inTemp[1],tempw2);
               
               qadd #(
                   .Q(Q),
@@ -169,7 +169,7 @@ module matrix4x4x1(
         
              qmult #(
              .Q(Q),
-            .N(N)) mult3w(mvp_inTemp[1][2],vertex_inTemp[2],tempw3);
+            .N(N)) mult3w(mvp_inTemp[3][2],vertex_inTemp[2],tempw3);
             
             qadd #(
                 .Q(Q),
@@ -177,7 +177,7 @@ module matrix4x4x1(
             
             qmult #(
                .Q(Q),
-              .N(N)) mult4w(mvp_inTemp[1][3],vertex_inTemp[3],tempw4);
+              .N(N)) mult4w(mvp_inTemp[3][3],vertex_inTemp[3],tempw4);
               
               qadd #(
                   .Q(Q),

@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module ViewToScreenConverter(
         
         //width and height are 16 bit integers (really 11)
@@ -38,12 +39,13 @@ module ViewToScreenConverter(
         .N(N)) mult1y(fixedPointHalfHeight,vector_in[31:16],yResult1);
         
      //drop lower bits (Q bits) to get an 11 bit integer
-     assign xInteger = xResult1[N-1:Q];
-     assign yInteger = yResult1[N-1:Q];
+     //TODO (just messed with this) (Q+1) opposed to Q
+     assign xInteger = xResult1[N-1:Q+1];
+     assign yInteger = yResult1[N-1:Q+1];
      
      //add half the size to make indices positive
      assign xpix_out = xInteger + halfWidth;
-     assign xpix_out = yInteger + halfHeight;
+     assign ypix_out = yInteger + halfHeight;
      
      //on_screen is high only when x and y values are between 0 and width/height.
      assign on_screen_out = (xpix_out < width_in) || (xpix_out >=0) || (ypix_out < height_in) || (ypix_out >= 0);
