@@ -35,7 +35,7 @@
         initial begin
           $readmemb(ROMFILE, mem);
           for (i = 0; i < RAM_DEPTH; i = i + 1) begin
-          #1 $display("%d: %d ",i,mem[i]);
+          //#1 $display("%d: %d ",i,mem[i]);
           end
         end
         

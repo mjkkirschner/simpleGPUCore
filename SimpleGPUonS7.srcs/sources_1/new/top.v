@@ -12,17 +12,16 @@ module top(
     
     wire i_clk = CLK100MHZ;
     
-    reg cs_ = 0;
     reg we_ = 1;
-    reg oe_ = 0;
 
     reg [13:0] romAddressLines = 0;
-    reg [15:0] romDataLines = 0;
+      
+    reg [Nbit-1:0] romDataLines = 0;
     
-    wire [15:0] vertDataOut;
+    wire [Nbit-1:0] vertDataOut;
     //single buffer xyz
-    reg [47:0] vertexBuffer = 0;
-    reg[63:0] vertex = 0;
+    reg [(Nbit*3)-1:0] vertexBuffer = 0;
+    reg[(Nbit*4)-1:0] vertex = 0;
     
     //TODO - maybe remove after vert data comes from external source
     reg [32:0] iterationCounter = 0;
@@ -36,17 +35,19 @@ module top(
      //projection regs
     reg startProjection = 0;
     //16 x 16 matrix
-    reg [255:0] mvp_in = 256'b1000000000001111100000000000001010000000000000101000000000000010000000000000000000000000000011111000000000001110100000000000101110000000000000110000000000001110000000000000111000000000000010111000000000000000000000000000000000000000011001100000000001110010;
-    wire [47:0] projected_vector;
+    reg [(Nbit*16)-1:0] mvp_in = 512'b10000000000000001011010100000100000000000000000000000000000000001000000000000000101101010000010000000000000000000000000000000000100000000000000010001011010110010000000000000001000101101011001000000000000000001000101101011001000000000000000000000000000000001000000000000000101110001100000010000000000000001011100011000000000000000000000010111000110000000000000000001000010100110100100010000000000000001001001111001101100000000000000010010011110011010000000000000000100100111100110100000000000010001010100100000110;
+    wire [(Nbit*3)-1:0] projected_vector;
     wire projection_done;
     
     //viewToScreen regs
     localparam SCREEN_WIDTH = 640;
-    reg [11:0 ]width = 640;
-    reg [11:0 ]height = 480;
+    localparam Qbit = 16;
+    localparam Nbit = 32;
+    reg  [11:0 ]width = 640;
+    reg  [11:0 ]height = 480;
     
-    wire [11:0] xpixel;
-    wire [11:0] ypixel;
+    wire  [11:0] xpixel;
+    wire  [11:0] ypixel;
     wire pixelOnScreen;
     
     //framebuffer regs
@@ -71,16 +72,14 @@ module top(
     
     //TODO do we need to reverse the bit format in the ram modules?
  
- /*
-    staticRamDiscretePorts #(.ROMFILE("testVertexData.mem"),.DATA_WIDTH(16),.ADDR_WIDTH(14)) externalVertexDataROM (
+ 
+    staticRamDiscretePorts #(.ROMFILE("testVertexData.mem"),.DATA_WIDTH(32),.ADDR_WIDTH(14)) externalVertexDataROM (
                      .address(romAddressLines),
                       .data(romDataLines), 
-                      .cs_(cs_),
                        .we_(we_),
-                       .oe_(oe_),
                         .clock(i_clk),
                        .Q(vertDataOut));
-   */            
+               
    
    
     /*
@@ -114,8 +113,8 @@ module top(
                          .Q_2(frameBufferDataOut2));
 
 
-     /*                  
-        vert_projector #(.Q(4),.N(16)) 
+                       
+        vert_projector #(.Q(Qbit),.N(Nbit)) 
                projector(.i_clk(i_clk),
                     .in_start(startProjection),
                     .mvp_in( mvp_in),
@@ -124,14 +123,14 @@ module top(
                    .out_done(projection_done)
                    );
                    
-     ViewToScreenConverter#(.Q(4),.N(16))
+     ViewToScreenConverter#(.Q(Qbit),.N(Nbit))
                 viewToScreen(.width_in(width),
                              .height_in(height),
                              .vector_in(projected_vector),
                              .xpix_out(xpixel),
                              .ypix_out(ypixel),
                              .on_screen_out(pixelOnScreen));
-       */                      
+                             
    vgaSignalGenerator vgaPart (
                          .i_clk(i_clk),
                          .i_pix_stb(pix_stb),
@@ -146,19 +145,7 @@ module top(
                            assign VGA_R = outputColorReg;
                            assign VGA_G = outputColorReg;
                            assign VGA_B = outputColorReg;
-    /*                       
-                           //width and height are 16 bit integers (really 11)
-                           input [11:0] width_in,
-                           input [11:0] height_in,
-                           //vector format [16bit,16,16] - each component is [1signbit,11databits,4Qbits]
-                           input [47:0] vector_in,
-                           
-                           output [11:0] xpix_out,
-                           output [11:0] ypix_out,
-                           output on_screen_out
-                   
-                       );
-    */
+ 
       
    //on each clock - increment the counter and grab more data from ram.
    //TODO a state machine would work well for this...
@@ -169,67 +156,96 @@ module top(
        //TODO try moving this inside a 25mhz clock
        frameBufferAddressLines2 <= (yvga * SCREEN_WIDTH) + xvga;
        outputColorReg <= frameBufferDataOut2;
-  /*     
+      
        //~3mhz
-           if(iterationCounter[4] == 1) begin
+           if(pix_stb) begin
            
                 // check that we are not over indexed // TOOD - this will be removed later.
                    if(vertCounter < 3644) begin
                         
                             //build up the vertex buffer
-                            if(stateCounter < 3) begin
-
+                            //GET X
+                            if(stateCounter == 0) begin
                                 //save data from ram shifted into the buffer.
-                                 vertexBuffer <= {vertexBuffer[47-15:0],vertDataOut};
-                                //increment address lines for next vertex.
-                                romAddressLines <= romAddressLines +1;
+                                 vertexBuffer <= {vertexBuffer[(Nbit*2)-1:0],vertDataOut};
                                 stateCounter <= stateCounter + 1;
                             end
                             
+                            if(stateCounter == 1) begin
+                             //increment address lines for next vertex.
+                               romAddressLines <= romAddressLines +1;
+                               stateCounter <= stateCounter + 1;
+                            end
+                                //GET Y
+                              if(stateCounter == 2) begin
+                                  //save data from ram shifted into the buffer.
+                                   vertexBuffer <= {vertexBuffer[(Nbit*2)-1:0],vertDataOut};
+                                  stateCounter <= stateCounter + 1;
+                             end
+                             if(stateCounter == 3) begin                
+                              //increment address lines for next vertex.
+                                romAddressLines <= romAddressLines +1;  
+                                stateCounter <= stateCounter + 1;       
+                             end       
+                               //GET Z                                 
+                             if(stateCounter == 4) begin
+                              //save data from ram shifted into the buffer.
+                               vertexBuffer <= {vertexBuffer[(Nbit*2)-1:0],vertDataOut};
+                              stateCounter <= stateCounter + 1;
+                         end
+                         //TODO do we want to do this here for the next vert?
+                          if(stateCounter == 5) begin                
+                          //increment address lines for next vertex.
+                            romAddressLines <= romAddressLines +1;  
+                            stateCounter <= stateCounter + 1;       
+                         end       
+                            
+                            
                             // append W - and set the states.
-                            if (stateCounter == 3) begin
+                            if (stateCounter == 6) begin
                                 vertCounter <= vertCounter + 1;
-                                vertex <= {vertexBuffer,16'b0000000000010000};
+                                vertex <= {vertexBuffer,{Qbit-1{1'b0}},1'b1,{Qbit{1'b0}}};
                                 vertexReady <= 1;
-                                stateCounter <= 4;
+                                stateCounter <= 7;
                             end
                             
                             // in state 4 - we are done buffering and are starting to project.
-                            if(stateCounter ==4 && vertexReady ==1 && matrixReady == 1) begin
+                            if(stateCounter ==7 && vertexReady ==1 && matrixReady == 1) begin
                                 startProjection <= 1;
-                                 stateCounter <= 5;
+                                 stateCounter <= 8;
                               end
                             
                             // projection just finished, reset some state and 
                             // draw the vertex.
-                            if(stateCounter ==5 && projection_done == 1) begin
-                                
-                                stateCounter <= 6;
+                            if(stateCounter >7 && stateCounter <100 && projection_done == 1) begin
+                                //lets wait here for another 15 cycles
+                                //TODO make this more easily adjustable.
+                                stateCounter <= stateCounter+1;
                             end
                             
                             //TODO lets assume pixel calculations are done
                             //so now map to memory and write to the framebuffer.
                             //
-                            if(stateCounter == 6) begin
+                            if(stateCounter == 100) begin
                                 #5 $display("vertexcount %d, should display at coord x %d, y %d ",vertCounter,xpixel,ypixel );
-                                memoryAddress = xpixel + (ypixel * width);
-                                frameBufferAddressLines1 = memoryAddress;
-                                stateCounter <= 7;
+                                memoryAddress <= xpixel + (ypixel * width);
+                                frameBufferAddressLines1 <= memoryAddress;
+                                stateCounter <= 101;
                             end
                             
                             // actually write a one into memory if the pixel is
                             // visible - else give do nothing.
-                             if(stateCounter == 7) begin
+                             if(stateCounter == 101) begin
                              //assert the write bit for a clock.
                              if(pixelOnScreen ==1) begin
                                 frameBuffer_we_ = 0;
                                 end
-                               stateCounter <= 8;
+                               stateCounter <= 102;
  
                             end
                             
                             //we're done - reset all state
-                            if(stateCounter == 8) begin
+                            if(stateCounter == 102) begin
                                 frameBuffer_we_ <= 1;
                                 stateCounter <= 0;
                                 vertexReady <= 0;
@@ -239,7 +255,7 @@ module top(
                             
                    end
             end
-            */
+            
     end
 
 endmodule

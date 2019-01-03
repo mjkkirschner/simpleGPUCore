@@ -21,41 +21,41 @@
 
 
 module matrix4x4x1(
-    input [255:0] mvp_in,
-    input [63:0] vertex_in,
-    output [63:0] result
+    input [(N*16)-1:0] mvp_in,
+    input [(N*4)-1:0] vertex_in,
+    output [(N*4)-1:0] result
     );
     
     parameter Q = 8;
     parameter N = 16;
     
     //internal variables
-    reg [15:0] mvp_inTemp[0:3][0:3];
-    reg [15:0] vertex_inTemp[0:3];
-    wire [15:0] res_TempOut [0:3];
-    wire [15:0] res_TempIntermediate [0:7];
+    reg [N-1:0] mvp_inTemp[0:3][0:3];
+    reg [N-1:0] vertex_inTemp[0:3];
+    wire [N-1:0] res_TempOut [0:3];
+    wire [N-1:0] res_TempIntermediate [0:7];
     
-    reg [63:0] out_reg_result = 0;
+    reg [(N*4)-1:0] out_reg_result = 0;
     
-     wire [15:0] tempx1;
-     wire [15:0] tempx2;
-     wire [15:0] tempx3;
-    wire [15:0] tempx4;
+     wire [N-1:0] tempx1;
+     wire [N-1:0] tempx2;
+     wire [N-1:0] tempx3;
+    wire [N-1:0] tempx4;
     
-     wire [15:0] tempy1;
-     wire [15:0] tempy2;
-     wire [15:0] tempy3;
-     wire [15:0] tempy4;
+     wire [N-1:0] tempy1;
+     wire [N-1:0] tempy2;
+     wire [N-1:0] tempy3;
+     wire [N-1:0] tempy4;
     
-     wire [15:0] tempz1;
-     wire [15:0] tempz2;
-     wire [15:0] tempz3;
-     wire [15:0] tempz4;
+     wire [N-1:0] tempz1;
+     wire [N-1:0] tempz2;
+     wire [N-1:0] tempz3;
+     wire [N-1:0] tempz4;
 
-     wire [15:0] tempw1;
-     wire [15:0] tempw2;
-     wire [15:0] tempw3;
-     wire [15:0] tempw4;
+     wire [N-1:0] tempw1;
+     wire [N-1:0] tempw2;
+     wire [N-1:0] tempw3;
+     wire [N-1:0] tempw4;
     
     integer i,j = 0;
     
