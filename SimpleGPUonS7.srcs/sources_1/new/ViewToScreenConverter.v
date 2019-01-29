@@ -30,8 +30,8 @@ module ViewToScreenConverter(
     
     // drop upper Q bits (max width is 2048... 2^11) not a problem for 640x480 vga output
     //TODO do we need to concat extra 0's in front here?
-    wire [N-1:0] fixedPointHalfWidth = {halfWidth, {Q{1'b0}}};
-    wire [N-1:0] fixedPointHalfHeight = {halfHeight, {Q{1'b0}}};
+    wire [N-1:0] fixedPointHalfWidth = {{4{1'b0}},halfWidth, {Q{1'b0}}};
+    wire [N-1:0] fixedPointHalfHeight = {{4{1'b0}},halfHeight, {Q{1'b0}}};
     
     
      qadd #(
@@ -46,10 +46,10 @@ module ViewToScreenConverter(
      qmult #(
         .Q(Q),
        .N(N)) mult1x(fixedPointHalfWidth,vector_in[(N*3)-1:(N*2)],xResult1);
-       
+       //multiply by neg y coord to get correct scaling. (non mirrored)
      qmult #(
          .Q(Q),
-        .N(N)) mult1y(fixedPointHalfHeight,vector_in[(N*2)-1:(N*1)],yResult1);
+        .N(N)) mult1y({1'b1,fixedPointHalfHeight[N-2:0]},vector_in[(N*2)-1:(N*1)],yResult1);
         
 
      //this converts the resulting normalized value to the screen integer as a Q number.
