@@ -108,6 +108,7 @@ module top(
     assign FULL = full;
     
     
+  
    
    always@(posedge CLK100MHZ) begin
     if(pix_stb) begin
@@ -200,16 +201,42 @@ module top(
        iterationCounter <= iterationCounter + 1;
        frameBufferAddressLines2 <= (yvga * SCREEN_WIDTH) + xvga;
        outputColorReg <= frameBufferDataOut2;
-      
+        
       
        //~3mhz
            if(pix_stb) begin
+           
+           // Based on MODE - jump to various states...
+            //mode control
+             /// 000_ vertex write
+             /// 001
+             /// 010
+             /// 011_blank frame buffer
+             
+              // if mode is set to write vertex, and we're outside of write vertex states
+              // then start write vertex flow over from 0.
+              if(MODE_I == 3'b000 && stateCounter >= 200 ) begin
+                stateCounter <= 0;
+              end
+              
+              if(MODE_I == 3'b011) begin
+              // jump to state 200 - where we will blank the framebuffer
+              // by incrementing address and writing over and over.
+              // until we leave this mode.
+               stateCounter <= 200;
+              end
+           
+           
            // wait until the FIFO is full, (3) numbers- 
            // then grab all three, do the projection
            // then return to a waiting state.
                     
                     //wait for FIFO state
                     if(stateCounter == 0) begin
+                        //reset some values for writing pixels
+                         frameBufferData <= 1;
+                         frameBuffer_we_ <= 1;
+                         
                         if(full == 1) begin
                             stateCounter <= 1;
                         end
@@ -299,6 +326,21 @@ module top(
                         startProjection <= 0;
 
                     end
+                    
+                     if(stateCounter == 200) begin
+                     //should not be projecting during screen blank.
+                     vertexReady <= 0;
+                     startProjection <= 0;
+                     
+                     //we want to write black pixels
+                      frameBufferData <= 0;
+                     // this will overflow and loop.
+                       memoryAddress <= memoryAddress +1;
+                       frameBufferAddressLines1 <= memoryAddress;
+                       //write 0 to framebuffer
+                       frameBuffer_we_ <= 0;
+                       
+                   end
                     
            end            
     end
