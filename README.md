@@ -1,6 +1,9 @@
 # simpleGPUCore
 verilog/FPGA hardware description for very simple GPU
 
+diagram:
+![](https://github.com/mjkkirschner/simpleGPUCore/blob/master/docs/gpusimple-2.png)
+
 
 references:
 
